@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 
+import { Realm, useApp } from '@realm/react';
+
 import { Container, Title, Slogan } from "./styles";
 
 import backgroundImg from '../../assets/background.png';
@@ -16,6 +18,8 @@ WebBrowser.maybeCompleteAuthSession();
 
 export function SignIn() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const app = useApp();
 
   // primeiro parâmetro dessa const é a requisição em si, e n interessa pra gente
   // segunda é a resposta da requisição
@@ -44,10 +48,17 @@ export function SignIn() {
         console.log('TOKEN DE AUTENTICAÇÃO =>', response.authentication?.idToken)
         // EndPoint batendo na google, para buscar as informações do usuário.
         // É assim q fazemos para obter o idToken do usuário do lado do nosso app, porém vamos fazer essa parte, no nosso mongoDb Atlas (justamente para n precisarmos fazer isso no app)
-        fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${response.authentication.idToken}`).then(response => response.json()).then(console.log);
+        // fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${response.authentication.idToken}`).then(response => response.json()).then(console.log);
+        const credentials = Realm.Credentials.jwt(response.authentication.idToken);
+
+        app.logIn(credentials).catch((err) => {
+          console.log(err);
+          setIsAuthenticating(false);
+          Alert.alert('Entrar', 'Não foi possível conectar-se a sua conta Google.');
+        });
       } else {
         setIsAuthenticating(false);
-        Alert.alert('Entrar', 'Não foi possível conectar-se a sua conta Google.')
+        Alert.alert('Entrar', 'Não foi possível conectar-se a sua conta Google.');
       }
     }
   }, [response]);
