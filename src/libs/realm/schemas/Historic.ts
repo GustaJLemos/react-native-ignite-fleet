@@ -13,8 +13,8 @@ export class Historic extends Realm.Object<Historic> {
   license_plate!: string;
   description!: string;
   status!: string;
-  created_at!: string;
-  updated_at!: string;
+  created_at!: Date;
+  updated_at!: Date;
 
   // método q vai ser chamado no momento q formos utilizar nosso schema
   // quais campos são necessários no momento de usar nosso schema
