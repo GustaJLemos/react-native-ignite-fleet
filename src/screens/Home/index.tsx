@@ -8,6 +8,8 @@ import { useQuery, useRealm } from '../../libs/realm';
 import { Historic } from '../../libs/realm/schemas/Historic';
 import { HistoricCard, HistoricCardProps } from '../../components/HistoricCard';
 import dayjs from 'dayjs';
+import { useUser } from '@realm/react';
+import { getLastAsyncTimestamp, saveLastSyncTimestamp } from '../../libs/asyncStorage/asyncStorage';
 
 export function Home() {
   const [vehicleInUse, setVehicleInUse] = useState<Historic | null>(null);
@@ -17,6 +19,7 @@ export function Home() {
 
   const historic = useQuery(Historic);
   const realm = useRealm();
+  const user = useUser();
 
   function handleRegisterMovement() {
     if (vehicleInUse?._id) {
@@ -38,16 +41,17 @@ export function Home() {
     }
   }
 
-  function fetchHistoric() {
+  async function fetchHistoric() {
     try {
       const response = historic.filtered("status = 'arrival' SORT(created_at DESC)");
-      console.log(response);
+
+      const lastSync = await getLastAsyncTimestamp();
 
       const formattedHistoric = response.map((item) => {
         return ({
           id: item._id!.toString(),
           licensePlate: item.license_plate,
-          isSync: false,
+          isSync: lastSync > item.updated_at!.getTime(),
           created: dayjs(item.created_at).format('[Saída em] DD/MM/YYYY [às] HH:mm')
         })
       })
@@ -62,6 +66,19 @@ export function Home() {
 
   function handleHistoricDetails(id: string) {
     navigate('arrival', { id })
+  }
+
+  // recebe quantos já foi transferido, e quantos ainda precisa
+  async function progressNotification(transferred: number, transferable: number) {
+    // mostra essas info em bytes
+    const percentage = (transferred / transferred) * 100;
+
+    if (percentage === 100) {
+      await saveLastSyncTimestamp();
+      fetchHistoric();
+    }
+
+
   }
 
   useEffect(() => {
@@ -83,6 +100,37 @@ export function Home() {
   useEffect(() => {
     fetchHistoric();
   }, [historic])
+
+  // quando estamos utilizando o modelo de sync flexible no realm, precisamos adicionar essa subscription para sincronizar os dados
+  useEffect(() => {
+    console.log('Synchronestou passando aq toda hora?')
+    realm.subscriptions.update((mutableSubs, realm) => {
+      const historicByUserQuery = realm.objects('Historic').filtered(`user_id = '${user!.id}'`);
+
+      mutableSubs.add(historicByUserQuery, { name: 'historic_by_user' });
+    })
+  }, [realm])
+
+  // Aqui estamos vendo quantos dados ainda faltam para ser sincronizados
+  useEffect(() => {
+    const syncSession = realm.syncSession;
+
+    if (!syncSession) {
+      return;
+    }
+
+    // parametros dessa função
+    // 1 direção que queremos obter = quero obter quantos ainda preciso enviar pro back
+    // 2 como quero que me reportem essa notificação
+    // 3 criamos uma função para receber essa informações
+    syncSession.addProgressNotification(
+      Realm.ProgressDirection.Upload,
+      Realm.ProgressMode.ReportIndefinitely,
+      progressNotification
+    )
+
+    return () => syncSession.removeProgressNotification(progressNotification);
+  }, [])
 
   return (
     <Container>
