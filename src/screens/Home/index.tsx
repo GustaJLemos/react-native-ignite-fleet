@@ -10,10 +10,14 @@ import { HistoricCard, HistoricCardProps } from '../../components/HistoricCard';
 import dayjs from 'dayjs';
 import { useUser } from '@realm/react';
 import { getLastAsyncTimestamp, saveLastSyncTimestamp } from '../../libs/asyncStorage/asyncStorage';
+import Toast from 'react-native-toast-message';
+import { TopMessage } from '../../components/TopMessage';
+import { CloudArrowUp } from 'phosphor-react-native';
 
 export function Home() {
   const [vehicleInUse, setVehicleInUse] = useState<Historic | null>(null);
   const [vehicleHistoric, setVehicleHistoric] = useState<HistoricCardProps[]>([]);
+  const [percentageToSync, setPercentageToSync] = useState<string | null>(null);
 
   const { navigate } = useNavigation();
 
@@ -34,7 +38,6 @@ export function Home() {
       // filtrando pelo status
       const filteredVehicle = historic.filtered("status = 'departure'")[0]
       setVehicleInUse(filteredVehicle);
-      console.log('historic', filteredVehicle);
     } catch (error) {
       Alert.alert('Veículo em uso', 'Não foi possível carregar o veículo em uso.');
       console.log(error);
@@ -75,10 +78,18 @@ export function Home() {
 
     if (percentage === 100) {
       await saveLastSyncTimestamp();
-      fetchHistoric();
+      await fetchHistoric();
+      setPercentageToSync(null);
+
+      Toast.show({
+        type: 'info',
+        text1: 'Todos os dados estão sincronizados'
+      })
     }
 
-
+    if (percentage < 100) {
+      setPercentageToSync(`${percentage.toFixed(0)}% sincronizado.`)
+    }
   }
 
   useEffect(() => {
@@ -103,7 +114,6 @@ export function Home() {
 
   // quando estamos utilizando o modelo de sync flexible no realm, precisamos adicionar essa subscription para sincronizar os dados
   useEffect(() => {
-    console.log('Synchronestou passando aq toda hora?')
     realm.subscriptions.update((mutableSubs, realm) => {
       const historicByUserQuery = realm.objects('Historic').filtered(`user_id = '${user!.id}'`);
 
@@ -134,6 +144,10 @@ export function Home() {
 
   return (
     <Container>
+      {
+        percentageToSync && <TopMessage title={percentageToSync} icon={CloudArrowUp} />
+      }
+
       <HomeHeader />
 
       <Content>
