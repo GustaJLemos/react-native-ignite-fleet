@@ -45,7 +45,6 @@ export function SignIn() {
   useEffect(() => {
     if (response?.type === 'success') {
       if (response.authentication?.idToken) {
-        console.log('TOKEN DE AUTENTICAÇÃO =>', response.authentication?.idToken)
         // EndPoint batendo na google, para buscar as informações do usuário.
         // É assim q fazemos para obter o idToken do usuário do lado do nosso app, porém vamos fazer essa parte, no nosso mongoDb Atlas (justamente para n precisarmos fazer isso no app)
         // fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${response.authentication.idToken}`).then(response => response.json()).then(console.log);
