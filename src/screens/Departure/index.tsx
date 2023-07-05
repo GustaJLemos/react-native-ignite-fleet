@@ -12,15 +12,17 @@ import { Historic } from '../../libs/realm/schemas/Historic';
 import { useUser } from '@realm/react';
 import { useNavigation } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
-import { LocationAccuracy, useForegroundPermissions, watchPositionAsync, LocationSubscription } from 'expo-location';
+import { LocationAccuracy, useForegroundPermissions, watchPositionAsync, LocationSubscription, LocationObjectCoords } from 'expo-location';
 import { Loading } from '../../components/Loading';
 import { LocationInfo } from '../../components/LocationInfo';
 import { Car } from 'phosphor-react-native';
+import { Map } from '../../components/Map';
 
 export function Departure() {
   const [licensePlate, setLicensePlate] = useState('');
   const [description, setDescription] = useState('');
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
+  const [currentCoords, setCurrentCords] = useState<LocationObjectCoords | null>(null);
 
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
@@ -83,6 +85,8 @@ export function Departure() {
       accuracy: LocationAccuracy.High,
       timeInterval: 1000
     }, (location) => {
+      setCurrentCords(location.coords);
+
       getAddressLocation(location.coords)
         .then((address) => {
           console.log(address)
@@ -124,6 +128,7 @@ export function Departure() {
 
       <KeyboardAwareScrollView extraHeight={100}>
         <ScrollView>
+          {currentCoords && <Map coordinates={[currentCoords]} />}
           <Content>
             {
               currentAddress &&
