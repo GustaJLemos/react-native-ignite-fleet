@@ -12,11 +12,12 @@ import { Historic } from '../../libs/realm/schemas/Historic';
 import { useUser } from '@realm/react';
 import { useNavigation } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scrollview';
-import { LocationAccuracy, useForegroundPermissions, watchPositionAsync, LocationSubscription, LocationObjectCoords } from 'expo-location';
+import { LocationAccuracy, useForegroundPermissions, watchPositionAsync, LocationSubscription, LocationObjectCoords, requestBackgroundPermissionsAsync } from 'expo-location';
 import { Loading } from '../../components/Loading';
 import { LocationInfo } from '../../components/LocationInfo';
 import { Car } from 'phosphor-react-native';
 import { Map } from '../../components/Map';
+import { startLocationTask } from '../../tasks/backgroundLocationTask';
 
 export function Departure() {
   const [licensePlate, setLicensePlate] = useState('');
@@ -36,7 +37,7 @@ export function Departure() {
   const user = useUser();
   const { goBack } = useNavigation();
 
-  function handleDepartureRegister() {
+  async function handleDepartureRegister() {
     try {
       if (!licensePlateValidate(licensePlate)) {
         licensePlateRef.current?.focus();
@@ -48,7 +49,20 @@ export function Departure() {
         return Alert.alert('Finalidade', 'Por favor, informe a finalidade da utilização do veículo');
       }
 
+      if (!currentCoords?.latitude && !currentCoords?.latitude) {
+        return Alert.alert('Localização', 'Não foi possível obter a localização atual. Tente novamente!');
+      }
+
       setIsRegistering(true);
+
+      const backgroundPermissions = await requestBackgroundPermissionsAsync();
+
+      if (!backgroundPermissions.granted) {
+        setIsRegistering(false);
+        return Alert.alert('Localização', 'É necessário permitir que o app tenha acesso a localização em segundo plano. Acesse as configurações do dispositivo e habilite para "Permitir o tempo todo".');
+      }
+
+      await startLocationTask();
 
       // write é baseado em transações, tudo q a gente quiser fazer de alteração e etc, fazemos no write, pq se der merda em algum lugar, ele reseta tudo
       // qualquer operação diferente de ler o banco, a gente usa write

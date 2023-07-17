@@ -10,6 +10,7 @@ import { useObject, useRealm } from '../../libs/realm';
 import { Historic } from '../../libs/realm/schemas/Historic';
 import { BSON } from 'realm';
 import { getLastAsyncTimestamp } from '../../libs/asyncStorage/asyncStorage';
+import { stopLocationTask } from '../../tasks/backgroundLocationTask';
 
 type RouteParamsProps = {
   id: string;
@@ -46,11 +47,13 @@ export function Arrival() {
     goBack();
   }
 
-  function handleArrivalRegister() {
+  async function handleArrivalRegister() {
     try {
       if (!historic) {
         return Alert.alert('Error', 'Não foi possível obter os dados para registrar a chegada do veículo');
       }
+
+      await stopLocationTask();
 
       realm.write(() => {
         historic.status = 'arrival';
