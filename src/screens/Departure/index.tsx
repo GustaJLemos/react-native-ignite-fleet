@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TextInput, ScrollView, Alert } from 'react-native';
-import { Container, Content, Message } from './styles';
+import { Container, Content, Message, MessageContent } from './styles';
 import { Header } from '../../components/Header';
 import { LicensePlateInput } from '../../components/LicensePlateInput';
 import { TextAreaInput } from '../../components/TextAreaInput';
@@ -18,6 +18,7 @@ import { LocationInfo } from '../../components/LocationInfo';
 import { Car } from 'phosphor-react-native';
 import { Map } from '../../components/Map';
 import { startLocationTask } from '../../tasks/backgroundLocationTask';
+import { openSettings } from '../../utils/openSettings';
 
 export function Departure() {
   const [licensePlate, setLicensePlate] = useState('');
@@ -59,7 +60,13 @@ export function Departure() {
 
       if (!backgroundPermissions.granted) {
         setIsRegistering(false);
-        return Alert.alert('Localização', 'É necessário permitir que o app tenha acesso a localização em segundo plano. Acesse as configurações do dispositivo e habilite para "Permitir o tempo todo".');
+        return Alert.alert(
+          'Localização',
+          'É necessário permitir que o app tenha acesso a localização em segundo plano. Acesse as configurações do dispositivo e habilite para "Permitir o tempo todo".',
+          [
+            { text: 'Abrir configurações', onPress: openSettings }
+          ]
+        );
       }
 
       await startLocationTask();
@@ -70,7 +77,12 @@ export function Departure() {
         realm.create('Historic', Historic.generate({
           user_id: user!.id,
           description,
-          license_plate: licensePlate.toUpperCase()
+          license_plate: licensePlate.toUpperCase(),
+          coords: [{
+            latitude: currentCoords.latitude,
+            longitude: currentCoords.longitude,
+            timestamp: new Date().getTime()
+          }]
         }));
       });
 
@@ -122,10 +134,14 @@ export function Departure() {
     return (
       <Container>
         <Header title='Saída' />
-        <Message>
-          Você precisa permitir que o aplicativo tenha acesso a localização para utilizar essa funcionalidade.
-          Por favor, acesse as configurações do seu dispositivo para conceder essa permissão ao aplicativo.
-        </Message>
+        <MessageContent>
+          <Message>
+            Você precisa permitir que o aplicativo tenha acesso a localização para utilizar essa funcionalidade.
+            Por favor, acesse as configurações do seu dispositivo para conceder essa permissão ao aplicativo.
+          </Message>
+
+          <Button title='Abrir configurações' onPress={openSettings} />
+        </MessageContent>
       </Container>
     )
   }
