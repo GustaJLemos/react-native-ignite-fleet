@@ -23,6 +23,9 @@ module.exports = {
       "supportsTablet": true,
       "config": {
         "googleMapsApiKey": process.env.GOOGLE_MAPS_API_KEY
+      },
+      "infoPlist": {
+        "UIBackgroundModes": ["location"]
       }
     },
     "android": {
@@ -31,6 +34,13 @@ module.exports = {
         "backgroundColor": "#202024"
       },
       "package": "com.gusta.ignitefleet",
+      "permissions": [
+        // localização precisa
+        "ACCESS_FINE_LOCATION",
+        // outros meios pra saber a localização, ex: wifi, torres próximas
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
       "config": {
         "googleMaps": {
           "apiKey": process.env.GOOGLE_MAPS_API_KEY
