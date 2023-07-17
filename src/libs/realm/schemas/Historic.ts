@@ -1,9 +1,11 @@
 import { Realm } from '@realm/react';
+import { CoordsSchemaProps } from './Coords';
 
 type GenerateProps = {
   user_id: string;
   description: string;
   license_plate: string;
+  coords: CoordsSchemaProps[];
 }
 
 // Na classe utilizo o mesmo nome q quero utilizar na collections
@@ -12,6 +14,7 @@ export class Historic extends Realm.Object<Historic> {
   user_id!: string;
   license_plate!: string;
   description!: string;
+  coords!: CoordsSchemaProps[];
   status!: string;
   created_at!: Date;
   updated_at!: Date;
@@ -19,7 +22,7 @@ export class Historic extends Realm.Object<Historic> {
   // método q vai ser chamado no momento q formos utilizar nosso schema
   // quais campos são necessários no momento de usar nosso schema
   // ele vai retornar um objeto com os dados q a gente quer guardar no banco
-  static generate({ user_id, description, license_plate }: GenerateProps) {
+  static generate({ user_id, description, license_plate, coords }: GenerateProps) {
     // aq por ex, podemos dizer quais campos vão ser informados no momento de utilizar o nosso schema, quais campos vão ter valor padrão, quai campos vão gerar valor automâtico, e assim vai
     // return tenq ser o objeto q a gente quer cadastrar
     return {
@@ -27,6 +30,7 @@ export class Historic extends Realm.Object<Historic> {
       user_id,
       description,
       license_plate,
+      coords,
       status: 'departure',
       created_at: new Date(),
       updated_at: new Date(),
@@ -49,6 +53,11 @@ export class Historic extends Realm.Object<Historic> {
       },
       license_plate: 'string',
       description: 'string',
+      coords: {
+        // lista de coordenadas
+        type: 'list',
+        objectType: 'Coords'
+      },
       status: 'string',
       created_at: 'date',
       updated_at: 'date',
