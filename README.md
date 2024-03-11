@@ -1,0 +1,3 @@
+Projeto criado na trilha Ignite - React Native da Rocketseat com o objetivo de estudar conceitos como mapa, localização, localização em segundo plano, banco de dados local (offline) entre outras ferramentas já utilizadas...
+
+O prototipo do projeto pode ser encontrado no <a href="https://www.figma.com/file/9pjODIcvM9DpjYccOAUvs9/Ignite-Fleet-(Community)?type=design&node-id=47-2&mode=design&t=xQzf416xuPrwrQCF-0">Figma</a>
